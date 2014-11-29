@@ -3,19 +3,19 @@
 #include <iostream>
 #include <queue>
 
-#ifndef OAHM_H
-#define OAHM_H
+#ifndef BHM_H
+#define BHM_H
 
 namespace COP3530 {
-    template <typename K, typename V, typename HASH_FUNC, HASH_FUNC hash, bool double_hash, typename PROBE_FUNC,
-                PROBE_FUNC probe, bool op_equals = true, typename EQ_FUNC = bool, EQ_FUNC eq_test = false>
-    class OAHM {
+    template <typename K, typename V, typename HASH_FUNC, HASH_FUNC hash, bool op_equals = true, typename EQ_FUNC = bool,
+            EQ_FUNC eq_test = false>
+    class BHM {
 
     private:
         struct HashEle {
             K key;
             V value;
-            bool invalid;
+            HashEle* next;
 
             HashEle() {
                 invalid = true;
@@ -36,12 +36,7 @@ namespace COP3530 {
 
         std::size_t m;
         std::size_t used;
-        HashEle* hashArray;
-
-        void initContainers() {
-            for (int i = 0; i < m; ++i)
-                hashArray[i] = *(new HashEle);
-        }
+        HashEle** hashArray;
 
     public:
 
