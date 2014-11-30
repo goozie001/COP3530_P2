@@ -15,135 +15,145 @@ namespace COP3530 {
         struct HashEle {
             K key;
             V value;
-            HashEle* next;
+            HashEle* next = NULL;
 
             HashEle() {
-                invalid = true;
+                next = NULL;
             }
 
             HashEle(K key, V value) {
                 this->key = key;
                 this->value = value;
-                invalid = false;
+                next = NULL;
             }
 
             void set(K key, V value) {
                 this->key = key;
                 this->value = value;
-                invalid = false;
+                next = NULL;
+            }
+
+            ~HashEle() {
+                if (next != NULL) {
+                    delete next;
+                    next = NULL;
+                }
             }
         };
 
         std::size_t m;
+        std::size_t numOfEle;
         std::size_t used;
         HashEle** hashArray;
 
     public:
 
-        OAHM() {
+        BHM() {
             m = 1024;
-            hashArray = new HashEle[m]();
+            hashArray = new HashEle*[m];
             used = 0;
-            initContainers();
+            numOfEle = 0;
+            for (int i = 0; i < m; ++i)
+                hashArray[i] = NULL;
         }
 
-        OAHM(std::size_t mySize) {
+        BHM(std::size_t mySize) {
             double i;
             double d = log2(mySize);
             int power = modf(d, &i) == 0.0 ? d : d + 1;
             m = pow(2, power);
             const std::size_t a = m;
-            hashArray = new HashEle[m]();
+            hashArray = new HashEle*[m]();
             used = 0;
-            initContainers();
+            numOfEle = 0;
+            for (int i = 0; i < m; ++i)
+                hashArray[i] = NULL;
         }
 
-        ~OAHM() {
-            delete hashArray;
+        ~BHM() {
+            clear();
         }
 
         bool insert(K key, V value) {
-            if (used == m)
-                return false;
-            else {
-                int i = hash(key, m);
-                if (hashArray[i].invalid) {
-                    hashArray[i].set(key, value);
-                    ++used;
-                    return true;
-                }
-                for (int j = 1; j < m; ++j) {
-                    int p = (i + probe(j)) % m;
-                    if (hashArray[p].invalid) {
-                        hashArray[p].set(key, value);
-                        ++used;
-                        return true;
-                    }
-                }
-                return false;
+            int i = hash(key, m);
+            HashEle* newEle = new HashEle(key, value);
+            HashEle* ele = hashArray[i];
+            if (ele == NULL) {
+                hashArray[i] = newEle;
+                ++used;
             }
+            else {
+                while (ele->next != NULL) {
+                    ele = ele->next;
+                }
+                ele->next = newEle;
+            }
+            ++numOfEle;
+            return true;
         }
 
         bool remove(K key, V& value) {
             bool result = false;
-            if (used == 0)
+            int i = hash(key, m);
+            HashEle* ele = hashArray[i];
+            HashEle* prev = NULL;
+            if (used == 0 || ele == NULL)
                 return result;
-            else {
-                std::queue<HashEle> slashSlingingSlasher;
-                int i = hash(key, m), j = 0;
-                int k = hash(key, m);
-                while (!is_empty() && !hashArray[i].invalid) {
-                    if (hashArray[i].key == key) {
-                        value = hashArray[i].value;
-                        hashArray[i].invalid = true;
-                        result = true;
-                        --used;
-                    } else {
-                        slashSlingingSlasher.push(hashArray[i]);
-                        hashArray[i].invalid = true;
-                        --used;
-                    }
-                    i = (k + probe(++j)) % m;
-                }
-                while (!slashSlingingSlasher.empty()) {
-                    HashEle hashEle = slashSlingingSlasher.front();
-                    insert(hashEle.key, hashEle.value);
-                    slashSlingingSlasher.pop();
-                }
-                return result;
+            while (ele != NULL && ele->key != key) {
+                prev = ele;
+                ele = ele->next;
             }
+            if (ele != NULL) {
+                if (ele == hashArray[i]) {
+                    value = ele->value;
+                    hashArray[i] = ele->next;
+                    if (hashArray[i] == NULL)
+                        --used;
+                    ele->next = NULL;
+
+                }
+                else {
+                    --used;
+                    value = ele->value;
+                    prev->next = ele->next;
+                    ele->next = NULL;
+                }
+                delete ele;
+                ele = NULL;
+                result = true;
+                --numOfEle;
+            }
+            return result;
         }
 
         bool search(K key, V& value) {
-            if (used == 0)
-                return false;
-            else {
-                int i = hash(key, m);
-                if (hashArray[i].key == key && !hashArray[i].invalid) {
-                    value = hashArray[i].value;
-                    return true;
-                } else {
-                    for (int j = 1; j < m; ++j) {
-                        int p = (probe(j) + i) % m;
-                        if (hashArray[p].key == key && !hashArray[p].invalid) {
-                            value = hashArray[p].value;
-                            return true;
-                        }
-                    }
+            bool result = false;
+            int i = hash(key, m);
+            HashEle* ele = hashArray[i];
+            while(ele != NULL) {
+                if (ele->key == key) {
+                    value = ele->value;
+                    result = true;
+                    return result;
                 }
-                return false;
+                ele = ele->next;
             }
+            return result;
         }
 
         void clear() {
-            delete hashArray;
-            hashArray = new HashEle[m]();
+            for (int i = 0; i < m; ++i) {
+                if (hashArray[i] != NULL) {
+                    delete hashArray[i];
+                    hashArray[i] = NULL;
+                }
+            }
             used = 0;
-            initContainers();
+            numOfEle = 0;
         }
 
         bool is_empty() {
-            return used == 0;
+            return numOfEle == 0;
         }
 
         std::size_t capacity() {
@@ -151,7 +161,7 @@ namespace COP3530 {
         }
 
         std::size_t size() {
-            return used;
+            return numOfEle;
         }
 
         double load() {
@@ -161,10 +171,16 @@ namespace COP3530 {
         void print(std::ostream& out) {
             out << "[";
             for (int i = 0; i < m; ++i) {
-                if (!hashArray[i].invalid) {
-                    out << hashArray[i].key;
-                } else {
+                HashEle* ele = hashArray[i];
+                if (ele == NULL)
                     out << "-";
+                else {
+                    while (ele != NULL) {
+                        out << ele->key;
+                        if (ele->next != NULL)
+                            out << ",";
+                        ele = ele->next;
+                    }
                 }
                 if (i != m - 1)
                     out << ",";
