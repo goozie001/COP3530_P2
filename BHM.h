@@ -76,7 +76,11 @@ namespace COP3530 {
 
         bool insert(K key, V value) {
             int i = hash(key, m);
-            HashEle* newEle = new HashEle(key, value);
+            try {
+                HashEle *newEle = new HashEle(key, value);
+            } catch (std::bad_alloc&) {
+                return false;
+            }
             HashEle* ele = hashArray[i];
             if (ele == NULL) {
                 hashArray[i] = newEle;
