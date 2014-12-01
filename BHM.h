@@ -6,13 +6,21 @@
 #ifndef BHM_H
 #define BHM_H
 
+inline int intHash2(int key, std::size_t m) {
+    const double A = (sqrt(5) - 1) / 2;
+    if (key < 0)
+        key = key * -1;
+    double intPart;
+    return (int)(m * modf(A * key, &intPart));
+}
+
 namespace COP3530 {
-    template <typename K, typename V, bool op_equals = true, typename EQ_FUNC = bool,
+    template <typename K, typename V, typename HASH_FUNC, HASH_FUNC hash, bool op_equals = true, typename EQ_FUNC = bool,
             EQ_FUNC eq_test = false>
     class BHM;
 
-    template <typename K, typename V>
-    class BHM<K, V> {
+    template <typename K, typename V, typename HASH_FUNC, HASH_FUNC hash>
+    class BHM<K, V, HASH_FUNC, hash> {
 
     private:
         struct HashEle {
@@ -78,12 +86,13 @@ namespace COP3530 {
         }
 
         int insert(K key, V value) {
-            int probe = -1;
+            int probe = 0;
             int i = hash(key, m);
+            HashEle* newEle;
             try {
-                HashEle *newEle = new HashEle(key, value);
+                newEle = new HashEle(key, value);
             } catch (std::bad_alloc&) {
-                return probe;
+                return -1;
             }
             HashEle* ele = hashArray[i];
             if (ele == NULL) {
@@ -91,18 +100,20 @@ namespace COP3530 {
                 ++used;
             }
             else {
-                while (ele->next != NULL) {
-                    ++probe;
+                while (ele->next != NULL && ele->key != key)
                     ele = ele->next;
+                if (ele->key == key)
+                    ele->value = value;
+                else {
+                    ele->next = newEle;
                 }
-                ele->next = newEle;
             }
             ++numOfEle;
             return probe;
         }
 
         int remove(K key, V& value) {
-            int probe = -1;
+            int probe = 0;
             int i = hash(key, m);
             HashEle* ele = hashArray[i];
             HashEle* prev = NULL;
@@ -122,7 +133,6 @@ namespace COP3530 {
                     ele->next = NULL;
                 }
                 else {
-                    --used;
                     value = ele->value;
                     prev->next = ele->next;
                     ele->next = NULL;
@@ -196,8 +206,8 @@ namespace COP3530 {
             out << "]" << std::endl;
         }
 
-        BHM<int, int> cluster_distribution() {
-            BHM<int, int> myMap(m / 2);
+        BHM<int, int, int(*)(int, std::size_t), intHash2> cluster_distribution() {
+            BHM<int, int, int(*)(int, std::size_t), intHash2> myMap(m / 2);
             for (int i = 0; i < m; ++i) {
                 HashEle* ele = hashArray[i];
                 int a = 0;
@@ -206,9 +216,9 @@ namespace COP3530 {
                     ele = ele->next;
                 }
                 if (a != 0) {
-                    int x;
+                    int x = -1;
                     if (myMap.search(a, x) > -1) {
-                        myProbe.insert(a, ++x);
+                        myMap.insert(a, ++x);
                     }
                     else {
                         myMap.insert(a, 1);
@@ -241,6 +251,26 @@ namespace COP3530 {
             V val = ele->value;
             remove(key, val);
             return key;
+        }
+
+        void print_all(std::ostream& out) {
+            out << "[";
+            for (int i = 0; i < m; ++i) {
+                HashEle* ele = hashArray[i];
+                if (ele == NULL)
+                    out << "-";
+                else {
+                    while (ele != NULL) {
+                        out << "(" << ele->key << ","<< ele->value << ")";
+                        if (ele->next != NULL)
+                            out << ",";
+                        ele = ele->next;
+                    }
+                }
+                if (i != m - 1)
+                    out << ",";
+            }
+            out << "]" << std::endl;
         }
     };
 
@@ -313,8 +343,9 @@ namespace COP3530 {
         int insert(K key, V value) {
             int probe = -1;
             int i = hash(key, m);
+            HashEle *newEle;
             try {
-                HashEle *newEle = new HashEle(key, value);
+                newEle = new HashEle(key, value);
             } catch (std::bad_alloc&) {
                 return probe;
             }
@@ -341,7 +372,7 @@ namespace COP3530 {
             HashEle* prev = NULL;
             if (used == 0 || ele == NULL)
                 return -1  * m;
-            while (ele != NULL && ele->key != key) {
+            while (ele != NULL && !eq_test(ele->key, key)) {
                 ++probe;
                 prev = ele;
                 ele = ele->next;
@@ -429,8 +460,8 @@ namespace COP3530 {
             out << "]" << std::endl;
         }
 
-        BHM<int, int> cluster_distribution() {
-            BHM<int, int> myMap(m / 2);
+        BHM<int, int, int(*)(int, std::size_t), intHash2> cluster_distribution() {
+            BHM<int, int, int(*)(int, std::size_t), intHash2> myMap(m / 2);
             for (int i = 0; i < m; ++i) {
                 HashEle* ele = hashArray[i];
                 int a = 0;
@@ -441,7 +472,7 @@ namespace COP3530 {
                 if (a != 0) {
                     int x;
                     if (myMap.search(a, x) > -1) {
-                        myProbe.insert(a, ++x);
+                        myMap.insert(a, ++x);
                     }
                     else {
                         myMap.insert(a, 1);
@@ -474,6 +505,25 @@ namespace COP3530 {
             V val = ele->value;
             remove(key, val);
             return key;
+        }
+        void print_all(std::ostream& out) {
+            out << "[";
+            for (int i = 0; i < m; ++i) {
+                HashEle* ele = hashArray[i];
+                if (ele == NULL)
+                    out << "-";
+                else {
+                    while (ele != NULL) {
+                        out << "(" << ele->key << ","<< ele->value << ")";
+                        if (ele->next != NULL)
+                            out << ",";
+                        ele = ele->next;
+                    }
+                }
+                if (i != m - 1)
+                    out << ",";
+            }
+            out << "]" << std::endl;
         }
     };
 }

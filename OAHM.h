@@ -256,6 +256,21 @@ namespace COP3530 {
             }
             out << "]" << std::endl;
         }
+
+        K remove_random() {
+            int i = rand() % size();
+            int j = 0;
+            int k = -1;
+            for (; j < m; ++j) {
+                if (!hashArray[j].invalid)
+                    ++k;
+                if (k == i)
+                    break;
+            }
+            K key = hashArray[j].key;
+            V val = hashArray[j].value;
+            remove(key, val);
+        }
     };
 
     template<typename K, typename V, typename HASH_FUNC, HASH_FUNC hash, typename PROBE_FUNC,
@@ -480,6 +495,21 @@ namespace COP3530 {
             }
             out << "]" << std::endl;
         }
+
+        K remove_random() {
+            int i = rand() % size();
+            int j = 0;
+            int k = -1;
+            for (; j < m; ++j) {
+                if (!hashArray[j].invalid)
+                    ++k;
+                if (k == i)
+                    break;
+            }
+            K key = hashArray[j].key;
+            V val = hashArray[j].value;
+            remove(key, val);
+        }
     };
 
     template<typename K, typename V, typename HASH_FUNC, HASH_FUNC hash, typename PROBE_FUNC,
@@ -696,6 +726,21 @@ namespace COP3530 {
                     out << ",";
             }
             out << "]" << std::endl;
+        }
+
+        K remove_random() {
+            int i = rand() % size();
+            int j = 0;
+            int k = -1;
+            for (; j < m; ++j) {
+                if (!hashArray[j].invalid)
+                    ++k;
+                if (k == i)
+                    break;
+            }
+            K key = hashArray[j].key;
+            V val = hashArray[j].value;
+            remove(key, val);
         }
     };
 
@@ -920,6 +965,21 @@ namespace COP3530 {
                     out << ",";
             }
             out << "]" << std::endl;
+        }
+
+        K remove_random() {
+            int i = rand() % size();
+            int j = 0;
+            int k = -1;
+            for (; j < m; ++j) {
+                if (!hashArray[j].invalid)
+                    ++k;
+                if (k == i)
+                    break;
+            }
+            K key = hashArray[j].key;
+            V val = hashArray[j].value;
+            remove(key, val);
         }
     };
 }

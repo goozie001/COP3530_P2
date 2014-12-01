@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "OAHM.h"
+#include "BHM.h"
 #include <cstring>
 
 inline int hash(int key, std::size_t m) {
@@ -104,12 +105,17 @@ TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are 
         SECTION("Require the print method to work properly") {
             REQUIRE_NOTHROW(linearHash.print(std::cout));
         }
-        SECTION("Make sure size, capacity, and load all return correct values.") {
+        SECTION("Make sure size, capacity and load all return correct values.") {
             // The size should equal the capacity since it is full.
             REQUIRE(linearHash.size() == 64);
             REQUIRE(linearHash.capacity() == linearHash.size());
             REQUIRE(linearHash.load() == 1);
-            linearHash.cluster_distribution().print_all(std::cout);
+        }
+        SECTION("Check out the validity of the two new experiment methods") {
+            REQUIRE(linearHash.size() == 64);
+            REQUIRE_NOTHROW(linearHash.cluster_distribution().print_all(std::cout));
+            REQUIRE_NOTHROW(linearHash.remove_random());
+            REQUIRE(linearHash.size() == 63);
         }
         SECTION("Test to see that clear() works in that it clear everything.") {
             REQUIRE_NOTHROW(linearHash.clear());
@@ -160,6 +166,12 @@ TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are 
             REQUIRE(quadHashMap.capacity() == quadHashMap.size() * 2);
             REQUIRE(quadHashMap.load() == 0.5);
         }
+        SECTION("Check out the validity of the two new experiment methods") {
+            REQUIRE(quadHashMap.size() == 64);
+            REQUIRE_NOTHROW(quadHashMap.cluster_distribution().print_all(std::cout));
+            REQUIRE_NOTHROW(quadHashMap.remove_random());
+            REQUIRE(quadHashMap.size() == 63);
+        }
         SECTION("Test to see that clear() works in that it clear everything.") {
             REQUIRE_NOTHROW(quadHashMap.clear());
             REQUIRE(quadHashMap.is_empty());
@@ -208,11 +220,71 @@ TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are 
             REQUIRE(hashHashMap.size() == 64);
             REQUIRE(hashHashMap.capacity() == hashHashMap.size() * 2);
             REQUIRE(hashHashMap.load() == 0.5);
-            hashHashMap.cluster_distribution().print_all(std::cout);
+        }
+        SECTION("Check out the validity of the two new experiment methods") {
+            REQUIRE(hashHashMap.size() == 64);
+            REQUIRE_NOTHROW(hashHashMap.cluster_distribution().print_all(std::cout));
+            REQUIRE_NOTHROW(hashHashMap.remove_random());
+            REQUIRE(hashHashMap.size() == 63);
         }
         SECTION("Test to see that clear() works in that it clear everything.") {
             REQUIRE_NOTHROW(hashHashMap.clear());
             REQUIRE(hashHashMap.is_empty());
+        }
+    }
+}
+
+TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are supposed to") {
+    COP3530::BHM<int, char, int (*)(int, std::size_t), hash> myHash(128);
+
+
+    SECTION("Test to see that the remove function works properly.") {
+        char s = 'A';
+        for (int i = 0; i < 256; ++i, ++s) {
+            REQUIRE(myHash.insert(i, s) > -1);
+        }
+        s = 'A';
+        char c;
+        for (int i = 0; i < 256; ++i, ++s) {
+            REQUIRE(myHash.remove(i, c) > -1);
+            REQUIRE(c == s);
+        }
+        REQUIRE(myHash.remove(2, c) <= 1);
+    }
+
+    SECTION("Test to see that, up to over the capacity of the array, the hashing and probing will allow slots to be used") {
+        char s = 'A';
+        for (int i = 0; i < 256; ++i, ++s) {
+            REQUIRE(myHash.insert(i, s) > -1);
+        }
+        SECTION("Test to see if the search function works properly.") {
+            s = 'A';
+            char c;
+            for (int i = 0; i < 256; ++i, ++s) {
+                REQUIRE(myHash.search(i, c) > -1);
+                REQUIRE(c == s);
+            }
+            REQUIRE(myHash.search(256, c) <= -1);
+        }
+        SECTION("Require the print method to work properly") {
+            REQUIRE_NOTHROW(myHash.print(std::cout));
+        }
+        SECTION("Make sure size, capacity, and load all return correct values.") {
+            // The size should equal twice the capacity since there are twice as many elements as there are slots due to pointers.
+            REQUIRE(myHash.size() == 256);
+            REQUIRE(myHash.capacity() == myHash.size() / 2);
+            // The load should be 1 because all buckets are filled when I use 256 elements.
+            REQUIRE(myHash.load() == 1);
+        }
+        SECTION("Check out the validity of the two new experiment methods") {
+            REQUIRE(myHash.size() == 256);
+            REQUIRE_NOTHROW(myHash.cluster_distribution().print_all(std::cout));
+            REQUIRE_NOTHROW(myHash.remove_random());
+            REQUIRE(myHash.size() == 255);
+        }
+        SECTION("Test to see that clear() works in that it clear everything.") {
+            REQUIRE_NOTHROW(myHash.clear());
+            REQUIRE(myHash.is_empty());
         }
     }
 }
