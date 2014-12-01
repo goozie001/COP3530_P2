@@ -77,12 +77,24 @@ namespace COP3530 {
                     ++used;
                     return true;
                 }
-                for (int j = 1; j < m; ++j) {
-                    int p = (i + probe(j)) % m;
-                    if (hashArray[p].invalid) {
-                        hashArray[p].set(key, value);
-                        ++used;
-                        return true;
+                if (!double_hash) {
+                    for (int j = 1; j < m; ++j) {
+                        int p = (i + probe(j)) % m;
+                        if (hashArray[p].invalid) {
+                            hashArray[p].set(key, value);
+                            ++used;
+                            return true;
+                        }
+                    }
+                } else {
+                    int k = probe(key, m);
+                    for (int j = 1; j < m; ++j) {
+                        int p = (i + k * j) % m;
+                        if (hashArray[p].invalid) {
+                            hashArray[p].set(key, value);
+                            ++used;
+                            return true;
+                        }
                     }
                 }
                 return false;
@@ -97,18 +109,35 @@ namespace COP3530 {
                 std::queue<HashEle> slashSlingingSlasher;
                 int i = hash(key, m), j = 0;
                 int k = hash(key, m);
-                while (!is_empty() && !hashArray[i].invalid) {
-                    if (hashArray[i].key == key) {
-                        value = hashArray[i].value;
-                        hashArray[i].invalid = true;
-                        result = true;
-                        --used;
-                    } else {
-                        slashSlingingSlasher.push(hashArray[i]);
-                        hashArray[i].invalid = true;
-                        --used;
-                    }
-                    i = (k + probe(++j)) % m;
+//                if (double_hash) {
+//                    int re = probe(key, m);
+//                    while (!is_empty() && !hashArray[i].invalid) {
+//                        if (hashArray[i].key == key) {
+//                            value = hashArray[i].value;
+//                            hashArray[i].invalid = true;
+//                            result = true;
+//                            --used;
+//                        } else {
+//                            slashSlingingSlasher.push(hashArray[i]);
+//                            hashArray[i].invalid = true;
+//                            --used;
+//                        }
+//                        i = (k + re * ++j) % m;
+//                    }
+                //} else {
+                    while (!is_empty() && !hashArray[i].invalid) {
+                        if (hashArray[i].key == key) {
+                            value = hashArray[i].value;
+                            hashArray[i].invalid = true;
+                            result = true;
+                            --used;
+                        } else {
+                            slashSlingingSlasher.push(hashArray[i]);
+                            hashArray[i].invalid = true;
+                            --used;
+                        }
+                        i = (k + probe(++j)) % m;
+                    //}
                 }
                 while (!slashSlingingSlasher.empty()) {
                     HashEle hashEle = slashSlingingSlasher.front();
@@ -128,12 +157,23 @@ namespace COP3530 {
                     value = hashArray[i].value;
                     return true;
                 } else {
-                    for (int j = 1; j < m; ++j) {
-                        int p = (probe(j) + i) % m;
-                        if (hashArray[p].key == key && !hashArray[p].invalid) {
-                            value = hashArray[p].value;
-                            return true;
+                    if (!double_hash) {
+                        for (int j = 1; j < m; ++j) {
+                            int p = (probe(j) + i) % m;
+                            if (hashArray[p].key == key && !hashArray[p].invalid) {
+                                value = hashArray[p].value;
+                                return true;
+                            }
                         }
+//                    } else {
+//                        int k = probe(key, m);
+//                        for (int j = 1; j < m; ++j) {
+//                            int p = (i + k * j) % m;
+//                            if (hashArray[p].key == key && !hashArray[p].invalid) {
+//                                value = hashArray[p].value;
+//                                return true;
+//                            }
+//                        }
                     }
                 }
                 return false;
