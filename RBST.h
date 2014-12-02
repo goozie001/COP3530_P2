@@ -1,5 +1,7 @@
 #include <queue>
+#include <stack>
 #include <iostream>
+#include <string>
 
 namespace COP3530 {
     template<typename K, typename V>
@@ -37,7 +39,7 @@ namespace COP3530 {
         std::size_t m;
 
         void insert_as_leaf(int &roo, K key, V val, int &count) {
-            if (key < tree[roo].key) {
+            if (ls(key, tree[roo].key)) {
                 if (tree[roo].left != -1) {
                     ++count;
                     insert_as_leaf(tree[roo].left, key, val, count);
@@ -71,7 +73,7 @@ namespace COP3530 {
                 free = left;
                 return;
             }
-            if (key < tree[roo].key) {
+            if (ls(key, tree[roo].key)) {
                 ++count;
                 insert_as_root(tree[roo].left, key, val, count);
                 rotate_right(roo);
@@ -105,6 +107,57 @@ namespace COP3530 {
             return (a > b) ? a : b;
         }
 
+        void traverseInOrder(int roo, std::vector<int>& result) {
+            if (roo == -1)
+                return;
+            traverseInOrder(tree[roo].left, result);
+            result.push_back(roo);
+            std::cout << tree[roo].key;
+            traverseInOrder(tree[roo].right, result);
+        }
+
+        bool eq(char* c1, char* c2) {
+            return strcmp(c1, c2) == 0;
+        }
+
+        bool eq(int c1, int c2) {
+            return c1 == c2;
+        }
+
+        bool eq(double c1, double c2) {
+            return c1 == c2;
+        }
+
+        bool eq(char c1, char c2) {
+            return c1 == c2;
+        }
+
+        bool eq(std::string s1, std::string s2) {
+            return s1.compare(s2) == 0;
+        }
+
+        bool ls(char* c1, char* c2) {
+            return strcmp(c1, c2) < 0;
+        }
+
+        bool ls(int c1, int c2) {
+            return c1 < c2;
+        }
+
+        bool ls(double c1, double c2) {
+            return c1 < c2;
+        }
+
+        bool ls(char c1, char c2) {
+            return c1 < c2;
+        }
+
+        bool ls(std::string s1, std::string s2) {
+            return s1.compare(s2) < 0;
+        }
+
+
+
     public:
 
         RBST(std::size_t m) {
@@ -124,11 +177,11 @@ namespace COP3530 {
             int i = root;
             while (i != -1) {
                 ++probe;
-                if (key == tree[i].key) {
+                if (eq(key, tree[i].key)) {
                     value = tree[i].val;
                     return probe;
                 }
-                else if (key < tree[i].key)
+                else if (ls(key, tree[i].key))
                     i = tree[i].left;
                 else
                     i = tree[i].right;
@@ -156,11 +209,11 @@ namespace COP3530 {
                 return -1;
             int head = root;
             int parent = -2;
-            while (tree[head].key != key) {
+            while (!eq(tree[head].key, key)) {
                 parent = head;
                 if (head == -1)
                     return -1 * probe;
-                if (key > tree[head].key)
+                if (ls(tree[head].key, key))
                     head = tree[head].right;
                 else
                     head = tree[head].left;
@@ -295,17 +348,28 @@ namespace COP3530 {
             return myCluster;
         }
 
-        Key 
+        K remove_random() {
+            srand(time(NULL));
+            int ind = rand() % m + 1;
+            int spot = 0;
+            std::vector<int> myVec;
+
+            traverseInOrder(root, myVec);
+            int desired = myVec[ind - 1];
+            V v;
+            K key = tree[desired].key;
+            remove(tree[desired].key, v);
+            return key;
+        }
 
         void print(std::ostream& out) {
+            out << "[";
             std::queue<int> levelOrder;
             int nav = root;
             levelOrder.push(nav);
             int a = (int)pow(2, calcHeight(root)) - 1;
             for (int i = 0; i < a; ++i) {
                 int next = levelOrder.front();
-                int nLeft = tree[next].left;
-                int nRight = tree[next].right;
                 levelOrder.pop();
                 if (next == -1) {
                     out << "-,";
@@ -313,13 +377,13 @@ namespace COP3530 {
                     levelOrder.push(-1);
                 }
                 else {
-                    levelOrder.push(nLeft);
-                    levelOrder.push(nRight);
+                    levelOrder.push(tree[next].left);
+                    levelOrder.push(tree[next].right);
 
                     out << tree[next].key << ",";
                 }
             }
-            out << std::endl;
+            out << "]" << std::endl;
         }
     };
 }
