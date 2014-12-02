@@ -12,7 +12,7 @@ inline bool compareStr(std::string str, std::string str1) {
 }
 
 TEST_CASE("RBST: Require all basic methods to work as they are supposed to for all data types") {
-    COP3530::RBST<int, char> tree(64);
+    COP3530::RBST<int, char> tree(10);
 
     SECTION("Test to see that, up to the capacity of the array, you can insert properly") {
         char s = 'A';
@@ -21,18 +21,22 @@ TEST_CASE("RBST: Require all basic methods to work as they are supposed to for a
         char* twoStrang = "hehehehehe";
         std::string str1 = "This is first";
         std::string str2 = "This is second";
-        for (int i = 0; i < 64; ++i, ++s, ++d) {
+        for (int i = 0; i < 10; ++i, ++s, ++d) {
             REQUIRE(tree.insert(i, s) > -1);
         }
         REQUIRE(tree.insert(100, s) <= -1);
-        tree.print_test(std::cout);
+        tree.print(std::cout);
 
         // TODO: Create another section
         s = 'A';
         char c;
-        for (int i = 0; i < 64; ++i, ++s, ++d) {
+        for (int i = 0; i < 10; ++i, ++s, ++d) {
             REQUIRE(tree.search(i, c) > -1);
             REQUIRE(c == s);
+        }
+        s = 'A';
+        for (int i = 0; i < 10; ++i, ++s) {
+            REQUIRE(tree.remove(i, s) > -1);
         }
         // These are to test out passing in the custom equals method (which these methods use except insert)
 //        REQUIRE(cstringHash.insert(twoStrang, s) >= 0);

@@ -6,8 +6,6 @@ namespace COP3530 {
     class RBST {
     private:
 
-
-
         struct Node {
             int left;
             int right;
@@ -99,6 +97,14 @@ namespace COP3530 {
             roo = temp;
         }
 
+        int calcHeight(int node) {
+            if (node == -1)
+                return 0;
+            int a = 1 + calcHeight(tree[node].left);
+            int b = 1 + calcHeight(tree[node].right);
+            return (a > b) ? a : b;
+        }
+
     public:
 
         RBST(std::size_t m) {
@@ -133,7 +139,6 @@ namespace COP3530 {
         }
 
         int insert(K key, V value) {
-            srand(time(NULL));
             if (used == m)
                 return -1;
             int probe = 0;
@@ -161,37 +166,154 @@ namespace COP3530 {
                     head = tree[head].left;
                 ++probe;
             }
-            if (parent == -2);  // Removing from the root
+            if (parent == -2) {  // Removing from the root
+                if (tree[head].left == -1 && tree[head].right == -1) { // Last node
+                    root = -1;
+                }
+                else if (tree[head].left != -1 && tree[head].right == -1) { // Left child
+                    root = tree[head].left;
+                }
+                else if (tree[head].left == -1 && tree[head].right != -1) { // Right child
+                    root = tree[head].right;
+                }
+                else {
+                    root = tree[head].left;
+                    int lChild = tree[head].left;
+                    int lParent = head;
+                    while (tree[lChild].right != -1) {
+                        lParent = lChild;
+                        lChild = tree[lChild].right;
+                    }
+                    if (head == tree[parent].right)
+                        tree[parent].right = lChild;
+                    else
+                        tree[parent].left = lChild;
+                    if (lParent != head) {
+                        tree[lChild].left = tree[head].left;
+                        tree[lParent].right = -1;
+                    }
+                    else
+                        tree[lChild].left = -1;
+                    tree[lChild].right = tree[head].right;
+                }
+            }
             else if (tree[head].left == -1 && tree[head].right == -1) { // Leaf Node! Jackpot!
                 if (head == tree[parent].left)
                     tree[parent].left = -1;
                 else
                     tree[parent].right = -1;
-                tree[head].left = free;
-                tree[head].right = -1;
-                free = head;
             }
-            else if ((tree[head].left == -1 && tree[head].right != -1) || (tree[head].right == -1 && tree[head].left != -1)) { // One child
-                if (head ==)
+            else if (tree[head].left == -1 && tree[head].right != -1) { // One child
+                if (head == tree[parent].left)
+                    tree[parent].left = tree[head].right;
+                else
+                    tree[parent].right = tree[head].right;
             }
+            else if (tree[head].right == -1 && tree[head].left != -1) {
+                if (head == tree[parent].left)
+                    tree[parent].left = tree[head].left;
+                else
+                    tree[parent].right = tree[head].left;
+            }
+            else { // Two children
+                int lChild = tree[head].left;
+                int lParent = head;
+                while (tree[lChild].right != -1) {
+                    lParent = lChild;
+                    lChild = tree[lChild].right;
+                }
+                if (head == tree[parent].right)
+                    tree[parent].right = lChild;
+                else
+                    tree[parent].left = lChild;
+                if (lParent != head) {
+                    tree[lChild].left = tree[head].left;
+                    tree[lParent].right = -1;
+                }
+                else
+                    tree[lChild].left = -1;
+                tree[lChild].right = tree[head].right;
+            }
+            value = tree[head].val;
+            tree[head].left = free;
+            tree[head].right = -1;
+            free = head;
+            --used;
             return probe;
+
         }
 
-        void print_test(std::ostream& out) {
+        void clear() {
+            delete tree;
+            tree = new Node[m];
+            free = 0;
+            root = -1;
+            for (int i = 0; i < m; ++i) {
+                tree[i] = *(new Node(i + 1));
+            }
+            tree[m - 1].left = -1;
+            used = 0;
+        }
+
+        bool is_empty() {
+            return used == 0;
+        }
+
+        std::size_t capacity() {
+            return m;
+        }
+
+        std::size_t size() {
+            return used;
+        }
+
+        double load() {
+            return used / m;
+        }
+
+        RBST<int, int> cluster_distribution() {
+            COP3530::RBST<int, int> myCluster(m / 4);
             std::queue<int> levelOrder;
             int nav = root;
             levelOrder.push(nav);
             while (!levelOrder.empty()) {
                 int next = levelOrder.front();
+                if (tree[next].left != -1)
+                    levelOrder.push(tree[next].left);
+                if (tree[next].right != -1)
+                    levelOrder.push(tree[next].right);
+                else if (tree[next].left == -1 && tree[next].right == -1) {
+                    V v;
+                    int val;
+                    int length = search(tree[next].key, v);
+                    if (myCluster.search(length, val) > -1)
+                        myCluster.insert(length, ++val);
+                    else
+                        myCluster.insert(length, 1);
+                }
+            }
+            return myCluster;
+        }
+
+        Key 
+
+        void print(std::ostream& out) {
+            std::queue<int> levelOrder;
+            int nav = root;
+            levelOrder.push(nav);
+            int a = (int)pow(2, calcHeight(root)) - 1;
+            for (int i = 0; i < a; ++i) {
+                int next = levelOrder.front();
                 int nLeft = tree[next].left;
                 int nRight = tree[next].right;
                 levelOrder.pop();
-                if (next == -1)
+                if (next == -1) {
                     out << "-,";
+                    levelOrder.push(-1);
+                    levelOrder.push(-1);
+                }
                 else {
-//                if (nLeft != -1)
                     levelOrder.push(nLeft);
-//                if (nRight != -1)
                     levelOrder.push(nRight);
 
                     out << tree[next].key << ",";
