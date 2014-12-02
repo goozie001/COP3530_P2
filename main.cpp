@@ -234,19 +234,39 @@ TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are 
     }
 }
 
-TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are supposed to") {
-    COP3530::BHM<int, char, int (*)(int, std::size_t), hash> myHash(128);
+TEST_CASE("Bucket Hash Map: Require all basic methods to work as they are supposed to") {
+    COP3530::BHM<int, char, int(*)(int, std::size_t), hash> myHash(128);
+    COP3530::BHM<char*, char, int(*)(char*, std::size_t), cStringHash> charHash(128);
+    COP3530::BHM<double, char, int(*)(double, std::size_t), dubHash> dubHash(128);
+    COP3530::BHM<std::string, char, int(*)(std::string, std::size_t), stringHash> strHash(128);
 
-
-    SECTION("Test to see that the remove function works properly.") {
+    SECTION("Test to see that the insert and remove functions work properly.") {
         char s = 'A';
-        for (int i = 0; i < 256; ++i, ++s) {
+        double d = 0.5;
+        char* strang = "hahahaha";
+        char* twoStrang = "hehehehehe";
+        std::string str1 = "This is first";
+        std::string str2 = "This is second";
+        for (int i = -256; i < 0; ++i, ++s, ++d) {
             REQUIRE(myHash.insert(i, s) > -1);
+            REQUIRE(dubHash.insert(d, s) > -1);
         }
+
+        REQUIRE(charHash.insert(twoStrang, s) >= 0);
+        REQUIRE(charHash.insert(strang, s) >= 0);
+        REQUIRE(strHash.insert(str1, s) >= 0);
+        REQUIRE(strHash.insert(str2, s) > -1);
+        REQUIRE(charHash.search(strang, s) > -1);
+        REQUIRE(strHash.search(str1, s) > -1);
+        REQUIRE(charHash.remove(twoStrang, s) > -1);
+        REQUIRE(strHash.remove(str2, s) > -1);
+        
         s = 'A';
         char c;
-        for (int i = 0; i < 256; ++i, ++s) {
+        d = 0.5;
+        for (int i = -256; i < 0; ++i, ++s, ++d) {
             REQUIRE(myHash.remove(i, c) > -1);
+            REQUIRE(dubHash.remove(d, c) > -1);
             REQUIRE(c == s);
         }
         REQUIRE(myHash.remove(2, c) <= 1);
@@ -254,13 +274,13 @@ TEST_CASE("Open Address Hash Map: Require all basic methods to work as they are 
 
     SECTION("Test to see that, up to over the capacity of the array, the hashing and probing will allow slots to be used") {
         char s = 'A';
-        for (int i = 0; i < 256; ++i, ++s) {
+        for (int i = -256; i < 0; ++i, ++s) {
             REQUIRE(myHash.insert(i, s) > -1);
         }
         SECTION("Test to see if the search function works properly.") {
             s = 'A';
             char c;
-            for (int i = 0; i < 256; ++i, ++s) {
+            for (int i = -256; i < 0; ++i, ++s) {
                 REQUIRE(myHash.search(i, c) > -1);
                 REQUIRE(c == s);
             }
