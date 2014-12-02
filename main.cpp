@@ -1,15 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "RBST.h"
-#include <cstring>
-
-inline bool compare(char* str, char* str1) {
-    return strcmp(str, str1) == 0;
-}
-
-inline bool compareStr(std::string str, std::string str1) {
-    return str.compare(str1) == 0;
-}
 
 TEST_CASE("RBST: Require all basic methods to work as they are supposed to for all data types") {
     COP3530::RBST<int, char> tree(10);
